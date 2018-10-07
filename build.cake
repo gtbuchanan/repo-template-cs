@@ -84,8 +84,9 @@ Task("UploadTestCoverage")
     .WithCriteria(!string.IsNullOrEmpty(coverallsToken))
     .IsDependentOn("Test")
     .Does(() => {
+        Information($"Coverage File ({FileExists(testCoverageFile)}): {testCoverageFile}");
+        Information($"Token Length: {coverallsToken.Length}");
         CoverallsIo(testCoverageFile, new CoverallsIoSettings {
-            Debug = true,
             RepoToken = coverallsToken
         });
     })
