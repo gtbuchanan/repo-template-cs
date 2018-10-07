@@ -22,6 +22,8 @@ A template for new repositories containing C# libraries.
 
 * Consolidated multi-level configuration with Directory.Build.props
 
+* Automatic versioning with [Nerdbank.GitVersioning](https://github.com/AArnott/Nerdbank.GitVersioning)
+
 ## Development
 
 ### Initial Setup
