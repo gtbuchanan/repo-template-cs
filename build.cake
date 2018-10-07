@@ -1,5 +1,6 @@
 #addin "nuget:?package=Cake.Coveralls&version=0.9.0"
 
+#tool "nuget:?package=coveralls.io&version=1.4.2"
 #tool "nuget:?package=OpenCover&version=4.6.519"
 #tool "nuget:?package=ReportGenerator&version=3.1.2"
 
