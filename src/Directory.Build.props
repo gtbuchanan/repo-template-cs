@@ -1,0 +1,25 @@
+<Project>
+
+  <Import Project="../Directory.Build.props" />
+  
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="LICENSE" />
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Content Condition="Exists('$(MSBuildProjectName).ExternalAnnotations.xml')"
+             Include="$(MSBuildProjectName).ExternalAnnotations.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Fody" Version="3.2.8" PrivateAssets="All" />
+    <PackageReference Include="JetBrainsAnnotations.Fody" Version="2.4.0" PrivateAssets="All" />
+    <PackageReference Include="NullGuard.Fody" Version="1.8.4" PrivateAssets="All" />
+  </ItemGroup>
+  
+</Project>

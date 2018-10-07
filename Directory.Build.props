@@ -1,0 +1,21 @@
+<Project>
+  
+  <PropertyGroup>
+    <Copyright>Copyright (c) George Taylor Buchanan and Contributors</Copyright>
+    <PackageLicenseUrl>https://opensource.org/licenses/mit</PackageLicenseUrl>
+    <PackageProjectUrl>https://taylorbuchanan.com</PackageProjectUrl>
+    <Authors>George Taylor Buchanan and Contributors</Authors>
+    <Owners>gtbuchanan</Owners>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/gtbuchanan/repo-template-cs</RepositoryUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" PrivateAssets="All" />
+  </ItemGroup>
+  
+</Project>

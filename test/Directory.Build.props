@@ -1,0 +1,30 @@
+<Project>
+
+  <Import Project="../Directory.Build.props" />
+
+  <PropertyGroup>
+    <Platforms>x64</Platforms>
+    <IsPackable>false</IsPackable>
+    <DebugType>full</DebugType>
+    
+    <!-- TODO: Remove when fixed (https://github.com/shouldly/shouldly/issues/412) -->
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="AutoFixture" Version="4.5.0" />
+    <PackageReference Include="AutoFixture.AutoNSubstitute" Version="4.5.0" />
+    <PackageReference Include="AutoFixture.NUnit3" Version="4.5.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
+    <PackageReference Include="NSubstitute" Version="3.1.0" />
+    <PackageReference Include="NUnit" Version="3.10.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.11.0-dev-00907" />
+    <PackageReference Include="PublicApiGenerator" Version="8.0.1" />
+    <PackageReference Include="Shouldly" Version="3.0.1" />
+  </ItemGroup>
+  
+</Project>
