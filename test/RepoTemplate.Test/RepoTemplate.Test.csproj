@@ -5,9 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\RepoTemplate\RepoTemplate.csproj">
-      <Aliases>RepoTemplate</Aliases>
-    </ProjectReference>
+    <ProjectReference Include="..\..\src\RepoTemplate\RepoTemplate.csproj" />
   </ItemGroup>
 
 </Project>

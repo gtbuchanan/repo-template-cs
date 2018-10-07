@@ -1,8 +1,17 @@
+#addin "nuget:?package=Cake.Coveralls&version=0.9.0"
+
+#tool "nuget:?package=OpenCover&version=4.6.519"
+#tool "nuget:?package=ReportGenerator&version=3.1.2"
+
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
+var coverallsToken = EnvironmentVariable("COVERALLS_TOKEN");
+var isLocal = BuildSystem.IsLocalBuild;
 
 var solutionPath = "./RepoTemplate.sln";
 var artifactsPath = "./artifacts/";
+var testCoveragePath = $"{artifactsPath}TestCoverage.xml";
+var testCoverageReportPath = $"{artifactsPath}TestCoverage/";
 
 Task("InstallDependencies")
 	.Does(() => ChocolateyInstall("chocolatey.config"));
@@ -34,19 +43,57 @@ Task("Build")
 Task("Test")
     .IsDependentOn("Build")
     .Does(() => {
-        var testDllPaths = GetFiles($"./test/**/bin/x64/{configuration}/net461/*.Test.dll");
-        DotNetCoreVSTest(testDllPaths, new DotNetCoreVSTestSettings {
-            ArgumentCustomization = args => args
-                .Append($"--ResultsDirectory:{artifactsPath}"),
-            Framework = ".NETFramework,Version=v4.6.1",
-            Logger = "trx;LogFileName=TestResults.trx",
-            Parallel = true,
-            Platform = VSTestPlatform.x64
-        });
+        Action<ICakeContext> dotNetCoreVsTest = context => {
+            var testDllPaths = context.GetFiles($"./test/**/bin/x64/{configuration}/net461/*.Test.dll");
+            context.DotNetCoreVSTest(testDllPaths, new DotNetCoreVSTestSettings {
+                ArgumentCustomization = args => args
+                    .Append($"--ResultsDirectory:{artifactsPath}"),
+                Framework = ".NETFramework,Version=v4.6.1",
+                Logger = "trx;LogFileName=TestResults.trx",
+                Parallel = true,
+                Platform = VSTestPlatform.x64
+            });
+        };
+
+        EnsureDirectoryExists(artifactsPath);
+        OpenCover(dotNetCoreVsTest,
+            new FilePath(testCoveragePath),
+            new OpenCoverSettings()
+                .WithFilter("+[*]*")
+                .WithFilter("-[*.Test]*.*Test")
+                .ExcludeByAttribute("*.ExcludeFromCodeCoverage*")
+                // Generated
+                .WithFilter("-[*]ProcessedByFody")
+                .WithFilter("-[*]ThisAssembly")
+                .WithFilter("-[*]PublicApiGenerator.*"));
     });
 
-Task("Pack")
+Task("ReportTestCoverage")
+    .WithCriteria(isLocal)
     .IsDependentOn("Test")
+    .Does(() => {
+        ReportGenerator(testCoveragePath, testCoverageReportPath);
+        if (IsRunningOnWindows()) {
+            StartProcess("cmd", new ProcessSettings {
+                Arguments = $"/C start \"\" {testCoverageReportPath}index.htm"
+            });
+        }
+    });
+
+Task("UploadTestCoverage")
+    .WithCriteria(!isLocal)
+    .WithCriteria(!string.IsNullOrEmpty(coverallsToken))
+    .IsDependentOn("Test")
+    .Does(() => {
+        CoverallsIo(testCoveragePath, new CoverallsIoSettings {
+            RepoToken = coverallsToken
+        });
+    })
+    .DeferOnError();
+
+Task("Package")
+    .IsDependentOn("ReportTestCoverage")
+    .IsDependentOn("UploadTestCoverage")
     .Does(() => {
         DotNetCorePack(solutionPath, new DotNetCorePackSettings {
             Configuration = configuration,
@@ -57,6 +104,7 @@ Task("Pack")
     });
 
 Task("Default")
-    .IsDependentOn("Test");
+    .IsDependentOn("ReportTestCoverage")
+    .IsDependentOn("UploadTestCoverage");
 
 RunTarget(target);

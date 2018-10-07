@@ -3,6 +3,8 @@ pool:
 
 steps:
 - powershell: ./build
+  env:
+    COVERALLS_TOKEN: $(Coveralls.Token)
 
 - task: PublishTestResults@2
   inputs:

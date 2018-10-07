@@ -4,7 +4,8 @@
   
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <DebugType>embedded</DebugType>
+    <!-- TODO: Use embedded when supported (https://github.com/OpenCover/opencover/issues/595) -->
+    <DebugType>full</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
