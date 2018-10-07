@@ -85,6 +85,7 @@ Task("UploadTestCoverage")
     .IsDependentOn("Test")
     .Does(() => {
         CoverallsIo(testCoverageFile, new CoverallsIoSettings {
+            Debug = true,
             RepoToken = coverallsToken
         });
     })
