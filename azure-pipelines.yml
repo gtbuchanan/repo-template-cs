@@ -2,8 +2,8 @@ pool:
   vmImage: VS2017-Win2016
 
 steps:
-- powershell: ./build >
-    -ArtifactDirectory $(Build.ArtifactStagingDirectory) >
+- powershell: ./build
+    -ArtifactDirectory $(Build.ArtifactStagingDirectory)
     -CoverallsToken $(Coveralls.Token)
 
 - task: PublishTestResults@2
