@@ -10,8 +10,9 @@ var artifactDirectory = Directory(Argument("artifactDirectory", "./artifacts"));
 var coverallsToken = Argument<string>("coverallsToken", null);
 var isLocal = BuildSystem.IsLocalBuild;
 var solutionFile = File("./RepoTemplate.sln");
-var testCoverageFile = artifactDirectory + File("TestCoverage.xml");
-var testCoverageReportDirectory = artifactDirectory + Directory("TestCoverageReport");
+var testResultDirectory = artifactDirectory + Directory("TestResults");
+var testCoverageFile = testResultDirectory + File("TestCoverage.xml");
+var testCoverageReportDirectory = testResultDirectory + Directory("TestCoverageReport");
 var testCoverageReportFile = testCoverageReportDirectory + File("index.htm");
 
 Task("InstallDependencies")
@@ -48,7 +49,7 @@ Task("Test")
             var testDllFiles = context.GetFiles($"./test/**/bin/x64/{configuration}/net461/*.Test.dll");
             context.DotNetCoreVSTest(testDllFiles, new DotNetCoreVSTestSettings {
                 ArgumentCustomization = args => args
-                    .Append($"--ResultsDirectory:{artifactDirectory}"),
+                    .Append($"--ResultsDirectory:{testResultDirectory}"),
                 Framework = ".NETFramework,Version=v4.6.1",
                 Logger = "trx;LogFileName=TestResults.trx",
                 Parallel = true,
@@ -56,7 +57,7 @@ Task("Test")
             });
         };
 
-        EnsureDirectoryExists(artifactDirectory);
+        EnsureDirectoryExists(testResultDirectory);
         OpenCover(dotNetCoreVsTest, testCoverageFile, new OpenCoverSettings()
             .WithFilter("+[*]*")
             .WithFilter("-[*.Test]*.*Test")
@@ -73,6 +74,7 @@ Task("ReportTestCoverage")
     .Does(() => {
         ReportGenerator(testCoverageFile, testCoverageReportDirectory);
         if (IsRunningOnWindows()) {
+            Information("Launching Test Coverage Report...");
             StartProcess("cmd", new ProcessSettings {
                 Arguments = $"/C start \"\" {testCoverageReportFile}"
             });
@@ -84,8 +86,7 @@ Task("UploadTestCoverage")
     .WithCriteria(!string.IsNullOrEmpty(coverallsToken))
     .IsDependentOn("Test")
     .Does(() => {
-        Information($"Coverage File ({FileExists(testCoverageFile)}): {testCoverageFile}");
-        Information($"Token Length: {coverallsToken.Length}");
+        Information($"Coverage File: {testCoverageFile}");
         CoverallsIo(testCoverageFile, new CoverallsIoSettings {
             RepoToken = coverallsToken
         });

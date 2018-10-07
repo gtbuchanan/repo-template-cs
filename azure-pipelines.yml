@@ -9,4 +9,11 @@ steps:
 - task: PublishTestResults@2
   inputs:
     testRunner: VSTest
-    testResultsFiles: $(Build.ArtifactStagingDirectory)/*.trx
+    testResultsFiles: $(Build.ArtifactStagingDirectory)\TestResults\*.trx
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish Test Artifacts
+  inputs:
+    pathToPublish: $(Build.ArtifactStagingDirectory)\TestResults
+    artifactType: container
+    artifactName: TestResults
