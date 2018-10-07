@@ -1,12 +1,12 @@
 pool:
-  vmImage: 'VS2017-Win2016'
+  vmImage: VS2017-Win2016
 
 steps:
-- powershell: ./build
-  env:
-    COVERALLS_TOKEN: $(Coveralls.Token)
+- powershell: ./build >
+    -ArtifactDirectory $(Build.ArtifactStagingDirectory) >
+    -CoverallsToken $(Coveralls.Token)
 
 - task: PublishTestResults@2
   inputs:
     testRunner: VSTest
-    testResultsFiles: 'artifacts/*.trx'
+    testResultsFiles: $(Build.ArtifactStagingDirectory)/*.trx
