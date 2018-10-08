@@ -40,7 +40,7 @@ Param(
     [string]$Target,
     [string]$Configuration,
     [string]$ArtifactDirectory,
-    [string]$CoverallsToken,
+    [string]$CodecovToken,
     [ValidateSet("Quiet", "Minimal", "Normal", "Verbose", "Diagnostic")]
     [string]$Verbosity,
     [switch]$ShowDescription,
@@ -219,7 +219,7 @@ $cakeArguments = @("$Script");
 if ($Target) { $cakeArguments += "-target=$Target" }
 if ($Configuration) { $cakeArguments += "-configuration=$Configuration" }
 if ($ArtifactDirectory) { $cakeArguments += "-artifactDirectory=$ArtifactDirectory" }
-if ($CoverallsToken) { $cakeArguments += "-coverallsToken=$CoverallsToken" }
+if ($CodecovToken) { $cakeArguments += "-codecovToken=$CodecovToken" }
 if ($Verbosity) { $cakeArguments += "-verbosity=$Verbosity" }
 if ($ShowDescription) { $cakeArguments += "-showdescription" }
 if ($DryRun) { $cakeArguments += "-dryrun" }

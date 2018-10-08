@@ -1,13 +1,13 @@
-#addin "nuget:?package=Cake.Coveralls&version=0.9.0"
+#addin "nuget:?package=Cake.Codecov"
 
-#tool "nuget:?package=coveralls.io&version=1.4.2"
+#tool "nuget:?package=Codecov"
 #tool "nuget:?package=OpenCover&version=4.6.519"
 #tool "nuget:?package=ReportGenerator&version=3.1.2"
 
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var artifactDirectory = Directory(Argument("artifactDirectory", "./artifacts"));
-var coverallsToken = Argument<string>("coverallsToken", null);
+var codecovToken = Argument<string>("codecovToken", null);
 var isLocal = BuildSystem.IsLocalBuild;
 var solutionFile = File("./RepoTemplate.sln");
 var testResultDirectory = artifactDirectory + Directory("TestResults");
@@ -83,13 +83,11 @@ Task("ReportTestCoverage")
 
 Task("UploadTestCoverage")
     .WithCriteria(!isLocal)
-    .WithCriteria(!string.IsNullOrEmpty(coverallsToken))
+    .WithCriteria(!string.IsNullOrEmpty(codecovToken))
     .IsDependentOn("Test")
     .Does(() => {
         Information($"Coverage File: {testCoverageFile}");
-        CoverallsIo(testCoverageFile, new CoverallsIoSettings {
-            RepoToken = coverallsToken
-        });
+        Codecov(testCoverageFile, codecovToken);
     })
     .DeferOnError();
 

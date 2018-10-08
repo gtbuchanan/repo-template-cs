@@ -2,7 +2,7 @@ pool:
   vmImage: VS2017-Win2016
 
 steps:
-- powershell: ./build -CoverallsToken $(Coveralls.Token)
+- powershell: ./build -CodecovToken $(Codecov.Token)
   displayName: Cake Build
 
 - task: PublishTestResults@2

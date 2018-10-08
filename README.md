@@ -1,6 +1,5 @@
 [![Build Status](https://dev.azure.com/gtbuchanan/repo-template-cs/_apis/build/status/gtbuchanan.repo-template-cs)](https://dev.azure.com/gtbuchanan/repo-template-cs/_build/latest?definitionId=1)
-[![Build status](https://ci.appveyor.com/api/projects/status/xlspa19rxgt2hslv?svg=true)](https://ci.appveyor.com/project/gtbuchanan/repo-template-cs)
-[![Coverage Status](https://coveralls.io/repos/github/gtbuchanan/repo-template-cs/badge.svg?branch=master)](https://coveralls.io/github/gtbuchanan/repo-template-cs?branch=master)
+[![codecov](https://codecov.io/gh/gtbuchanan/repo-template-cs/branch/master/graph/badge.svg)](https://codecov.io/gh/gtbuchanan/repo-template-cs)
 
 # C# Library Repository Template
 
@@ -22,7 +21,7 @@ A template for new repositories containing C# libraries.
 
 * Public API change tracking with [PublicApiGenerator](https://github.com/JakeGinnivan/ApiApprover)
 
-* Test coverage analysis with [OpenCover](https://github.com/OpenCover/opencover), [ReportGenerator](https://github.com/danielpalme/ReportGenerator), and [Coveralls](https://coveralls.io/)
+* Test coverage analysis with [OpenCover](https://github.com/OpenCover/opencover), [ReportGenerator](https://github.com/danielpalme/ReportGenerator), and [Codecov](https://codecov.io)
 
 * Consolidated multi-level configuration with Directory.Build.props
 
