@@ -1,4 +1,5 @@
 [![Build Status](https://dev.azure.com/gtbuchanan/repo-template-cs/_apis/build/status/gtbuchanan.repo-template-cs)](https://dev.azure.com/gtbuchanan/repo-template-cs/_build/latest?definitionId=1)
+[![Build status](https://ci.appveyor.com/api/projects/status/xlspa19rxgt2hslv?svg=true)](https://ci.appveyor.com/project/gtbuchanan/repo-template-cs)
 [![Coverage Status](https://coveralls.io/repos/github/gtbuchanan/repo-template-cs/badge.svg?branch=master)](https://coveralls.io/github/gtbuchanan/repo-template-cs?branch=master)
 
 # C# Library Repository Template
