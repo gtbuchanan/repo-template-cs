@@ -27,6 +27,8 @@ A template for new repositories containing C# libraries.
 
 * Automatic versioning with [Nerdbank.GitVersioning](https://github.com/AArnott/Nerdbank.GitVersioning)
 
+* GitHub [SourceLink](https://github.com/dotnet/sourcelink) metadata for enhanced debugging
+
 ## Development
 
 ### Initial Setup

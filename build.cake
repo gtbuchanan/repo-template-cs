@@ -1,6 +1,6 @@
-#addin "nuget:?package=Cake.Codecov"
+#addin "nuget:?package=Cake.Codecov&version=0.4.0"
 
-#tool "nuget:?package=Codecov"
+#tool "nuget:?package=Codecov&version=1.1.0"
 #tool "nuget:?package=OpenCover&version=4.6.519"
 #tool "nuget:?package=ReportGenerator&version=3.1.2"
 
@@ -99,12 +99,11 @@ Task("Package")
             Configuration = configuration,
             NoBuild = true,
             NoRestore = true,
-            OutputDirectory = artifactDirectory
+            OutputDirectory = artifactDirectory + Directory("Packages")
         });
     });
 
 Task("Default")
-    .IsDependentOn("ReportTestCoverage")
-    .IsDependentOn("UploadTestCoverage");
+    .IsDependentOn("Package");
 
 RunTarget(target);

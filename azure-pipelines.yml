@@ -24,3 +24,17 @@ steps:
     pathToPublish: '$(Build.ArtifactStagingDirectory)/TestResults'
     artifactType: container
     artifactName: TestResults
+
+- task: CopyFiles@2
+  displayName: Copy Package Artifacts
+  inputs:
+    sourceFolder: artifacts/Packages
+    contents: '**'
+    targetFolder: '$(Build.ArtifactStagingDirectory)/Packages'
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish Package Artifacts
+  inputs:
+    pathToPublish: '$(Build.ArtifactStagingDirectory)/Packages'
+    artifactType: container
+    artifactName: Packages

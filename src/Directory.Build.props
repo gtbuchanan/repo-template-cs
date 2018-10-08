@@ -4,8 +4,7 @@
   
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <!-- TODO: Use embedded when supported (https://github.com/OpenCover/opencover/issues/595) -->
-    <DebugType>full</DebugType>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +19,8 @@
   <ItemGroup>
     <PackageReference Include="Fody" Version="3.2.8" PrivateAssets="All" />
     <PackageReference Include="JetBrainsAnnotations.Fody" Version="2.4.0" PrivateAssets="All" />
-    <PackageReference Include="Nerdbank.GitVersioning" Version="2.2.13" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" /> 
+    <PackageReference Include="Nerdbank.GitVersioning" Version="2.2.13" PrivateAssets="All" />
     <PackageReference Include="NullGuard.Fody" Version="1.8.4" PrivateAssets="All" />
   </ItemGroup>
   

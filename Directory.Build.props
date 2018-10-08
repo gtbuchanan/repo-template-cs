@@ -9,6 +9,7 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/gtbuchanan/repo-template-cs</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
