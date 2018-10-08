@@ -2,6 +2,7 @@
 using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
+using System;
 
 namespace RepoTemplate.Test.Customizations
 {
@@ -10,7 +11,7 @@ namespace RepoTemplate.Test.Customizations
         [Test]
         public void SubstitutesInterfaces()
         {
-            var fixture = new Fixture().Customize(new DomainCustomization());
+            var fixture = CreateFixture();
 
             Should.NotThrow(() =>
             {
@@ -18,6 +19,20 @@ namespace RepoTemplate.Test.Customizations
                 test.Test.Returns(default(string));
             });
         }
+
+        [Test]
+        public void SubstitutesDelegates()
+        {
+            var fixture = CreateFixture();
+
+            Should.NotThrow(() =>
+            {
+                var action = fixture.Create<Func<bool>>();
+                action.Invoke().Returns(true);
+            });
+        }
+
+        private static IFixture CreateFixture() => new Fixture().Customize(new DomainCustomization());
 
         internal interface ITest
         {

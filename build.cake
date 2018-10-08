@@ -1,19 +1,33 @@
+// Add-ins
 #addin "nuget:?package=Cake.Codecov&version=0.4.0"
+#addin "nuget:?package=Cake.GitVersioning&version=2.2.13"
 
+// Tools
 #tool "nuget:?package=Codecov&version=1.1.0"
 #tool "nuget:?package=OpenCover&version=4.6.519"
 #tool "nuget:?package=ReportGenerator&version=3.1.2"
 
+// Arguments
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var artifactDirectory = Directory(Argument("artifactDirectory", "./artifacts"));
 var codecovToken = Argument<string>("codecovToken", null);
+
+// Build Info
+var version = GitVersioningGetVersion().SemVer2;
 var isLocal = BuildSystem.IsLocalBuild;
+
+// Paths
 var solutionFile = File("./RepoTemplate.sln");
 var testResultDirectory = artifactDirectory + Directory("TestResults");
+var testResultFileName = "TestResults.trx";
 var testCoverageFile = testResultDirectory + File("TestCoverage.xml");
-var testCoverageReportDirectory = testResultDirectory + Directory("TestCoverageReport");
+var testCoverageReportDirectory = artifactDirectory + Directory("TestCoverageReport");
 var testCoverageReportFile = testCoverageReportDirectory + File("index.htm");
+
+///////////////////////////////////////////
+
+Setup(_ => Information($"Version {version}"));
 
 Task("InstallDependencies")
 	.Does(() => ChocolateyInstall("chocolatey.config"));
@@ -51,7 +65,7 @@ Task("Test")
                 ArgumentCustomization = args => args
                     .Append($"--ResultsDirectory:{testResultDirectory}"),
                 Framework = ".NETFramework,Version=v4.6.1",
-                Logger = "trx;LogFileName=TestResults.trx",
+                Logger = $"trx;LogFileName={testResultFileName}",
                 Parallel = true,
                 Platform = VSTestPlatform.x64
             });
@@ -61,6 +75,8 @@ Task("Test")
         OpenCover(dotNetCoreVsTest, testCoverageFile, new OpenCoverSettings()
             .WithFilter("+[*]*")
             .WithFilter("-[*.Test]*.*Test")
+            .ExcludeByAttribute("*.Test*")
+            .ExcludeByAttribute("*.Theory*")
             .ExcludeByAttribute("*.ExcludeFromCodeCoverage*")
             // Generated
             .WithFilter("-[*]ProcessedByFody")
@@ -69,7 +85,7 @@ Task("Test")
     });
 
 Task("ReportTestCoverage")
-    .WithCriteria(isLocal)
+    .WithCriteria(isLocal, "Not a local build")
     .IsDependentOn("Test")
     .Does(() => {
         ReportGenerator(testCoverageFile, testCoverageReportDirectory);
@@ -82,8 +98,8 @@ Task("ReportTestCoverage")
     });
 
 Task("UploadTestCoverage")
-    .WithCriteria(!isLocal)
-    .WithCriteria(!string.IsNullOrEmpty(codecovToken))
+    .WithCriteria(!isLocal, "Not a CI build")
+    .WithCriteria(!string.IsNullOrEmpty(codecovToken), "Missing Codecov token")
     .IsDependentOn("Test")
     .Does(() => {
         Information($"Coverage File: {testCoverageFile}");
@@ -105,5 +121,7 @@ Task("Package")
 
 Task("Default")
     .IsDependentOn("Package");
+
+///////////////////////////////////////////
 
 RunTarget(target);
