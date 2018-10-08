@@ -5,21 +5,22 @@ steps:
 - powershell: ./build -CoverallsToken $(Coveralls.Token)
   displayName: Cake Build
 
-- task: CopyFiles@2
-  displayName: Copy Test Artifacts
-  inputs:
-    contents: artifacts/TestResults/*
-    targetFolder: $(Build.ArtifactStagingDirectory)\TestResults
-
 - task: PublishTestResults@2
   displayName: Publish Test Results
   inputs:
     testRunner: VSTest
-    testResultsFiles: $(Build.ArtifactStagingDirectory)\TestResults\*.trx
+    testResultsFiles: artifacts/TestResults/*.trx
+
+- task: CopyFiles@2
+  displayName: Copy Test Artifacts
+  inputs:
+    sourceFolder: artifacts/TestResults
+    contents: '**'
+    targetFolder: $(Build.ArtifactStagingDirectory)/TestResults
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Test Artifacts
   inputs:
-    pathToPublish: $(Build.ArtifactStagingDirectory)\TestResults
+    pathToPublish: $(Build.ArtifactStagingDirectory)/TestResults
     artifactType: container
     artifactName: TestResults
