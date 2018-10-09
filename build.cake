@@ -67,7 +67,11 @@ Task("Test")
         };
 
         EnsureDirectoryExists(testResultDirectory);
-        OpenCover(dotNetCoreVsTest, testCoverageFile, new OpenCoverSettings()
+        OpenCover(dotNetCoreVsTest, testCoverageFile,
+            new OpenCoverSettings{
+                ArgumentCustomization = args =>
+                    args.Append("-register")
+            }
             .WithFilter("+[*]*")
             .WithFilter("-[*.Test]*.*Test")
             .ExcludeByAttribute("*.Test*")
