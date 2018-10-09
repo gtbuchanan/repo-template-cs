@@ -5,7 +5,7 @@
 // Tools
 #tool "nuget:?package=Codecov&version=1.1.0"
 #tool "nuget:?package=OpenCover&version=4.6.519"
-#tool "nuget:?package=ReportGenerator&version=3.1.2"
+#tool "nuget:?package=ReportGenerator&version=4.0.0-rc4"
 
 // Arguments
 var target = Argument("target", "Default");
@@ -21,7 +21,8 @@ var isLocal = BuildSystem.IsLocalBuild;
 var solutionFile = File("./RepoTemplate.sln");
 var testResultDirectory = artifactDirectory + Directory("TestResults");
 var testResultFileName = "TestResults.trx";
-var testCoverageFile = testResultDirectory + File("TestCoverage.xml");
+var testCoverageFile = testResultDirectory + File("TestCoverage.OpenCover.xml");
+var testCoverageCoberturaFile = testResultDirectory + File("TestCoverage.Cobertura.xml");
 var testCoverageReportDirectory = artifactDirectory + Directory("TestCoverageReport");
 var testCoverageReportFile = testCoverageReportDirectory + File("index.htm");
 
@@ -34,13 +35,7 @@ Task("InstallDependencies")
 
 Task("Clean")
     .Does(() => {
-        if (DirectoryExists(artifactDirectory)) {
-            Information("Cleaning artifacts...");
-            DeleteDirectory(artifactDirectory, new DeleteDirectorySettings {
-                Recursive = true
-            });
-            Information("Cleaning solution...");
-        }
+        CleanDirectory(artifactDirectory);
         DotNetCoreClean(solutionFile, new DotNetCoreCleanSettings {
             Configuration = configuration,
             Verbosity = DotNetCoreVerbosity.Quiet
@@ -85,11 +80,15 @@ Task("Test")
     });
 
 Task("ReportTestCoverage")
-    .WithCriteria(isLocal, "Not a local build")
     .IsDependentOn("Test")
     .Does(() => {
-        ReportGenerator(testCoverageFile, testCoverageReportDirectory);
-        if (IsRunningOnWindows()) {
+        var reportTypes = isLocal ? "Html;Cobertura" : "Cobertura";
+        ReportGenerator(testCoverageFile, testCoverageReportDirectory, new ReportGeneratorSettings {
+            ArgumentCustomization = args => args
+                .Append($"-reporttypes:{reportTypes}")
+        });
+        MoveFile(testCoverageReportDirectory + File("Cobertura.xml"), testCoverageCoberturaFile);
+        if (isLocal && IsRunningOnWindows()) {
             Information("Launching Test Coverage Report...");
             StartProcess("cmd", new ProcessSettings {
                 Arguments = $"/C start \"\" {testCoverageReportFile}"

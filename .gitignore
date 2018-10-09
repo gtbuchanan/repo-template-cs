@@ -17,6 +17,9 @@ artifacts/
 _ReSharper.*
 *.ExternalAnnotations.xml
 
+# Shouldly
+*.received.txt
+
 # Subversion
 .svn/
 
