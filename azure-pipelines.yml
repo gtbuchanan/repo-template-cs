@@ -1,3 +1,6 @@
+variables:
+  testResultDirectory: 'artifacts/TestResults'
+
 pool:
   vmImage: VS2017-Win2016
 
@@ -9,17 +12,18 @@ steps:
   displayName: Publish Test Results
   inputs:
     testRunner: VSTest
-    testResultsFiles: 'artifacts/TestResults/TestResults.trx'
+    testResultsFiles: '$(testResultDirectory)/TestResults.trx'
 
 - task: PublishCodeCoverageResults@1
+  displayName: Publish Test Coverage
   inputs:
-    codeCoverageTool: 'cobertura'
-    summaryFileLocation: 'artifacts/TestResults/TestCoverage.Coburtura.xml'
+    codeCoverageTool: Cobertura
+    summaryFileLocation: '$(testResultDirectory)/TestCoverage.Cobertura.xml'
 
 - task: CopyFiles@2
   displayName: Copy Test Artifacts
   inputs:
-    sourceFolder: artifacts/TestResults
+    sourceFolder: '$(testResultDirectory)'
     contents: '**'
     targetFolder: '$(Build.ArtifactStagingDirectory)/TestResults'
 
@@ -28,7 +32,7 @@ steps:
   inputs:
     pathToPublish: '$(Build.ArtifactStagingDirectory)/TestResults'
     artifactType: container
-    artifactName: TestResults
+    artifactName: Test Results
 
 - task: CopyFiles@2
   displayName: Copy Package Artifacts
