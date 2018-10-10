@@ -8,7 +8,8 @@ steps:
 - task: CopyFiles@2
   displayName: Copy Artifacts
   inputs:
-    contents: 'artifacts/**'
+    sourceFolder: 'artifacts'
+    contents: '**'
     targetFolder: '$(Build.ArtifactStagingDirectory)'
 
 - task: PublishTestResults@2
