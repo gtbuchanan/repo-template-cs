@@ -1,6 +1,3 @@
-variables:
-  testResultDirectory: 'artifacts/TestResults'
-
 pool:
   vmImage: VS2017-Win2016
 
@@ -8,24 +5,23 @@ steps:
 - powershell: ./build -CodecovToken $(Codecov.Token)
   displayName: Cake Build
 
+- task: CopyFiles@2
+  displayName: Copy Artifacts
+  inputs:
+    contents: 'artifacts/**'
+    targetFolder: '$(Build.ArtifactStagingDirectory)'
+
 - task: PublishTestResults@2
   displayName: Publish Test Results
   inputs:
     testRunner: VSTest
-    testResultsFiles: '$(testResultDirectory)/TestResults.trx'
+    testResultsFiles: '$(Build.ArtifactStagingDirectory)/TestResults/TestResults.trx'
 
 - task: PublishCodeCoverageResults@1
   displayName: Publish Test Coverage
   inputs:
     codeCoverageTool: Cobertura
-    summaryFileLocation: '$(testResultDirectory)/TestCoverage.Cobertura.xml'
-
-- task: CopyFiles@2
-  displayName: Copy Test Artifacts
-  inputs:
-    sourceFolder: '$(testResultDirectory)'
-    contents: '**'
-    targetFolder: '$(Build.ArtifactStagingDirectory)/TestResults'
+    summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/TestCoverage.Cobertura.xml'
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Test Artifacts
@@ -33,13 +29,6 @@ steps:
     pathToPublish: '$(Build.ArtifactStagingDirectory)/TestResults'
     artifactType: container
     artifactName: Test Results
-
-- task: CopyFiles@2
-  displayName: Copy Package Artifacts
-  inputs:
-    sourceFolder: artifacts/Packages
-    contents: '**'
-    targetFolder: '$(Build.ArtifactStagingDirectory)/Packages'
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Package Artifacts
