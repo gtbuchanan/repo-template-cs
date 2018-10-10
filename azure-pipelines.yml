@@ -2,7 +2,7 @@ pool:
   vmImage: VS2017-Win2016
 
 steps:
-- powershell: ./build -CodecovToken $(Codecov.Token)
+- powershell: ./build
   displayName: Cake Build
 
 - task: CopyFiles@2
