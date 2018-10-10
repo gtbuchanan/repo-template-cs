@@ -1,9 +1,7 @@
 // Add-ins
-#addin "nuget:?package=Cake.Codecov&version=0.4.0"
 #addin "nuget:?package=Cake.GitVersioning&version=2.2.13"
 
 // Tools
-#tool "nuget:?package=Codecov&version=1.1.0"
 #tool "nuget:?package=OpenCover&version=4.6.519"
 #tool "nuget:?package=ReportGenerator&version=4.0.0-rc4"
 
@@ -11,7 +9,6 @@
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var artifactDirectory = Directory(Argument("artifactDirectory", "./artifacts"));
-var codecovToken = Argument<string>("codecovToken", null);
 
 // Build Info
 var version = GitVersioningGetVersion().SemVer2;
@@ -86,13 +83,14 @@ Task("Test")
 Task("ReportTestCoverage")
     .IsDependentOn("Test")
     .Does(() => {
-        var reportTypes = isLocal ? "Html;Cobertura" : "Cobertura";
+        var reportTypes = isLocal ? "Html" : "HtmlInline;Cobertura";
         ReportGenerator(testCoverageFile, testCoverageReportDirectory, new ReportGeneratorSettings {
             ArgumentCustomization = args => args
                 .Append($"-reporttypes:{reportTypes}")
         });
-        MoveFile(testCoverageReportDirectory + File("Cobertura.xml"), testCoverageCoberturaFile);
-        if (isLocal && IsRunningOnWindows()) {
+        if (!isLocal) {
+            MoveFile(testCoverageReportDirectory + File("Cobertura.xml"), testCoverageCoberturaFile);
+        } else if (IsRunningOnWindows()) {
             Information("Launching Test Coverage Report...");
             StartProcess("cmd", new ProcessSettings {
                 Arguments = $"/C start \"\" {testCoverageReportFile}"
@@ -100,19 +98,8 @@ Task("ReportTestCoverage")
         }
     });
 
-Task("UploadTestCoverage")
-    .WithCriteria(!isLocal, "Not a CI build")
-    .WithCriteria(!string.IsNullOrEmpty(codecovToken), "Missing Codecov token")
-    .IsDependentOn("Test")
-    .Does(() => {
-        Information($"Coverage File: {testCoverageFile}");
-        Codecov(testCoverageFile, codecovToken);
-    })
-    .DeferOnError();
-
 Task("Package")
     .IsDependentOn("ReportTestCoverage")
-    .IsDependentOn("UploadTestCoverage")
     .Does(() => {
         DotNetCorePack(solutionFile, new DotNetCorePackSettings {
             Configuration = configuration,

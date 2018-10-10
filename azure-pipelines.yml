@@ -23,6 +23,7 @@ steps:
   inputs:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/TestCoverage.Cobertura.xml'
+    reportDirectory: '$(Build.ArtifactStagingDirectory)/TestCoverageReport'
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Test Artifacts
