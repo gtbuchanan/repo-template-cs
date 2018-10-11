@@ -4,6 +4,8 @@ pool:
 steps:
 - powershell: ./build
   displayName: Cake Build
+  env:
+    DROPBOX_TOKEN: $(Dropbox.Token)
 
 - task: CopyFiles@2
   displayName: Copy Artifacts

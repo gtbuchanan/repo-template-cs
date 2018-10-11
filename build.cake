@@ -1,5 +1,9 @@
 // Add-ins
+#addin "nuget:?package=Cake.Git&version=0.19.0"
 #addin "nuget:?package=Cake.GitVersioning&version=2.2.13"
+#addin "nuget:?package=Cake.Http&version=0.5.0"
+#addin "nuget:?package=Cake.Json&version=3.0.1"
+#addin "nuget:?package=Newtonsoft.Json&version=9.0.1"
 
 // Tools
 #tool "nuget:?package=OpenCover&version=4.6.519"
@@ -9,10 +13,12 @@
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var artifactDirectory = Directory(Argument("artifactDirectory", "./artifacts"));
+var dropboxToken = EnvironmentVariable("DROPBOX_TOKEN");
 
 // Build Info
 var version = GitVersioningGetVersion().SemVer2;
 var isLocal = BuildSystem.IsLocalBuild;
+var branch = GitBranchCurrent(".");
 
 // Paths
 var solutionFile = File("./RepoTemplate.sln");
@@ -83,7 +89,7 @@ Task("Test")
 Task("ReportTestCoverage")
     .IsDependentOn("Test")
     .Does(() => {
-        var reportTypes = isLocal ? "Html" : "HtmlInline;Cobertura";
+        var reportTypes = isLocal ? "Html" : "HtmlInline;Cobertura;Badges";
         ReportGenerator(testCoverageFile, testCoverageReportDirectory, new ReportGeneratorSettings {
             ArgumentCustomization = args => args
                 .Append($"-reporttypes:{reportTypes}")
@@ -98,8 +104,29 @@ Task("ReportTestCoverage")
         }
     });
 
-Task("Package")
+Task("UploadTestCoverage")
+    .WithCriteria(!isLocal, "Local environment")
+    .WithCriteria(!string.IsNullOrEmpty(dropboxToken), "Missing Dropbox token")
     .IsDependentOn("ReportTestCoverage")
+    .Does(() => {
+        var argsJson = SerializeJson(new {
+            path = $"/{branch.FriendlyName}/badges/coverage-reportgenerator.svg",
+            mode = "overwrite",
+            mute = true
+        });
+        var coverageBadgeFile = testCoverageReportDirectory + File("badge_linecoverage.svg");
+        var requestBytes = System.IO.File.ReadAllBytes(coverageBadgeFile);
+        var responseBody = HttpPost("https://content.dropboxapi.com/2/files/upload",
+            new HttpSettings { RequestBody = requestBytes }
+                .EnsureSuccessStatusCode()
+                .UseBearerAuthorization(dropboxToken)
+                .AppendHeader("Dropbox-API-Arg", argsJson)
+                .SetContentType("application/octet-stream"));
+        Verbose(responseBody);
+    });
+
+Task("Package")
+    .IsDependentOn("UploadTestCoverage")
     .Does(() => {
         DotNetCorePack(solutionFile, new DotNetCorePackSettings {
             Configuration = configuration,

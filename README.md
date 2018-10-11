@@ -1,5 +1,5 @@
 [![Build Status](https://dev.azure.com/gtbuchanan/repo-template-cs/_apis/build/status/gtbuchanan.repo-template-cs)](https://dev.azure.com/gtbuchanan/repo-template-cs/_build/latest?definitionId=1)
-[![codecov](https://codecov.io/gh/gtbuchanan/repo-template-cs/branch/master/graph/badge.svg)](https://codecov.io/gh/gtbuchanan/repo-template-cs)
+![Test Coverage](https://dl.dropbox.com/s/fzt3bzww6hn6nkq/coverage-reportgenerator.svg)
 
 # C# Library Repository Template
 
@@ -11,9 +11,9 @@ A template for new repositories containing C# libraries.
 
 * One-step local build/test with [Cake Build](https://cakebuild.net/)
 
-* Continuous Integration with Azure Pipelines
+* Continuous Integration with [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines)
 
-* Automatic external JetBrains Annotations from attributes with [JetBrainsAnnotations.Fody](https://github.com/tom-englert/JetBrainsAnnotations.Fody)
+* Automatic external [JetBrains Annotations](https://www.jetbrains.com/help/resharper/Code_Analysis__Code_Annotations.html) from attributes with [JetBrainsAnnotations.Fody](https://github.com/tom-englert/JetBrainsAnnotations.Fody)
 
 * Automatic null guarding from JetBrains Annotations with [NullGuard.Fody](https://github.com/Fody/NullGuard)
 
@@ -21,7 +21,7 @@ A template for new repositories containing C# libraries.
 
 * Public API change tracking with [PublicApiGenerator](https://github.com/JakeGinnivan/ApiApprover)
 
-* Test coverage analysis with [OpenCover](https://github.com/OpenCover/opencover), [ReportGenerator](https://github.com/danielpalme/ReportGenerator), and [Codecov](https://codecov.io)
+* Test coverage analysis with [OpenCover](https://github.com/OpenCover/opencover) and [ReportGenerator](https://github.com/danielpalme/ReportGenerator)
 
 * Consolidated multi-level configuration with Directory.Build.props
 
