@@ -1,5 +1,5 @@
-[![Build Status](https://dev.azure.com/gtbuchanan/repo-template-cs/_apis/build/status/gtbuchanan.repo-template-cs)](https://dev.azure.com/gtbuchanan/repo-template-cs/_build/latest?definitionId=1)
-![Test Coverage](https://dl.dropbox.com/s/fzt3bzww6hn6nkq/coverage-reportgenerator.svg)
+[![Build Status](https://dev.azure.com/gtbuchanan/repo-template-cs/_apis/build/status/gtbuchanan.repo-template-cs?branchName=master)](https://dev.azure.com/gtbuchanan/repo-template-cs/_build/latest?definitionId=1)
+[![Test Coverage](https://dl.dropbox.com/s/fzt3bzww6hn6nkq/coverage-reportgenerator.svg)](https://dev.azure.com/gtbuchanan/repo-template-cs/_build/latest?definitionId=1)
 
 # C# Library Repository Template
 

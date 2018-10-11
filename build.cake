@@ -18,7 +18,9 @@ var dropboxToken = EnvironmentVariable("DROPBOX_TOKEN");
 // Build Info
 var version = GitVersioningGetVersion().SemVer2;
 var isLocal = BuildSystem.IsLocalBuild;
-var branch = GitBranchCurrent(".");
+var branchName = TFBuild.IsRunningOnVSTS || TFBuild.IsRunningOnTFS
+    ? TFBuild.Environment.Repository.Branch
+    : GitBranchCurrent(".").FriendlyName;
 
 // Paths
 var solutionFile = File("./RepoTemplate.sln");
@@ -31,7 +33,7 @@ var testCoverageReportFile = testCoverageReportDirectory + File("index.htm");
 
 ///////////////////////////////////////////
 
-Setup(_ => Information($"Version {version}"));
+Setup(_ => Information($"Version {version} from branch {branchName}"));
 
 Task("InstallDependencies")
 	.Does(() => ChocolateyInstall("chocolatey.config"));
@@ -110,7 +112,7 @@ Task("UploadTestCoverage")
     .IsDependentOn("ReportTestCoverage")
     .Does(() => {
         var argsJson = SerializeJson(new {
-            path = $"/{branch.FriendlyName}/badges/coverage-reportgenerator.svg",
+            path = $"/{branchName}/badges/coverage-reportgenerator.svg",
             mode = "overwrite",
             mute = true
         });
