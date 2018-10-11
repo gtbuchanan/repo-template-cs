@@ -36,7 +36,7 @@ var testCoverageReportFile = testCoverageReportDirectory + File("index.htm");
 Setup(_ => Information($"Version {version} from branch {branchName}"));
 
 Task("InstallDependencies")
-	.Does(() => ChocolateyInstall("chocolatey.config"));
+    .Does(() => ChocolateyInstall("chocolatey.config"));
 
 Task("Clean")
     .Does(() => {
