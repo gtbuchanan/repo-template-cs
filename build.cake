@@ -18,7 +18,11 @@ var dropboxToken = EnvironmentVariable("DROPBOX_TOKEN");
 // Build Info
 var version = GitVersioningGetVersion().SemVer2;
 var isLocal = BuildSystem.IsLocalBuild;
-var branchName = TFBuild.IsRunningOnVSTS || TFBuild.IsRunningOnTFS
+var isPipelines = TFBuild.IsRunningOnVSTS || TFBuild.IsRunningOnTFS;
+var isFork = !StringComparer.OrdinalIgnoreCase.Equals(
+    "gtbuchanan/repo-template-cs",
+    TFBuild.Environment.Repository.RepoName);
+var branchName = isPipelines
     ? TFBuild.Environment.Repository.Branch
     : GitBranchCurrent(".").FriendlyName;
 
@@ -108,6 +112,7 @@ Task("ReportTestCoverage")
 
 Task("UploadTestCoverage")
     .WithCriteria(!isLocal, "Local environment")
+    .WithCriteria(!isFork, "Fork")
     .WithCriteria(!string.IsNullOrEmpty(dropboxToken), "Missing Dropbox token")
     .IsDependentOn("ReportTestCoverage")
     .Does(() => {

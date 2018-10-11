@@ -15,9 +15,11 @@ steps:
     custom: tool
     arguments: install --tool-path . nbgv
   displayName: Install NBGV tool
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
 
 - script: nbgv cloud
   displayName: Set Version
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
 
 - powershell: ./build
   displayName: Cake Build
@@ -30,12 +32,14 @@ steps:
     sourceFolder: 'artifacts'
     contents: '**'
     targetFolder: '$(Build.ArtifactStagingDirectory)'
+    condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
 
 - task: PublishTestResults@2
   displayName: Publish Test Results
   inputs:
     testRunner: VSTest
     testResultsFiles: '$(Build.ArtifactStagingDirectory)/TestResults/TestResults.trx'
+    condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
 
 - task: PublishCodeCoverageResults@1
   displayName: Publish Test Coverage
@@ -43,6 +47,7 @@ steps:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/TestCoverage.Cobertura.xml'
     reportDirectory: '$(Build.ArtifactStagingDirectory)/TestCoverageReport'
+    condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Test Artifacts
@@ -50,6 +55,7 @@ steps:
     pathToPublish: '$(Build.ArtifactStagingDirectory)/TestResults'
     artifactType: container
     artifactName: Test Results
+    condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Package Artifacts
@@ -57,3 +63,4 @@ steps:
     pathToPublish: '$(Build.ArtifactStagingDirectory)/Packages'
     artifactType: container
     artifactName: Packages
+    condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
