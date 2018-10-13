@@ -1,4 +1,5 @@
 // Add-ins
+#addin "nuget:?package=Cake.Codecov&version=0.4.0"
 #addin "nuget:?package=Cake.Git&version=0.19.0"
 #addin "nuget:?package=Cake.GitVersioning&version=2.2.13"
 #addin "nuget:?package=Cake.Http&version=0.5.0"
@@ -6,6 +7,7 @@
 #addin "nuget:?package=Newtonsoft.Json&version=9.0.1"
 
 // Tools
+#tool "nuget:?package=Codecov&version=1.1.0"
 #tool "nuget:?package=OpenCover&version=4.6.519"
 #tool "nuget:?package=ReportGenerator&version=4.0.0-rc4"
 
@@ -13,6 +15,7 @@
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var artifactDirectory = Directory(Argument("artifactDirectory", "./artifacts"));
+var codecovToken = EnvironmentVariable("CODECOV_TOKEN");
 var dropboxToken = EnvironmentVariable("DROPBOX_TOKEN");
 
 // Build Info
@@ -113,23 +116,28 @@ Task("ReportTestCoverage")
 Task("UploadTestCoverage")
     .WithCriteria(!isLocal, "Local environment")
     .WithCriteria(!isFork, "Fork")
-    .WithCriteria(!string.IsNullOrEmpty(dropboxToken), "Missing Dropbox token")
     .IsDependentOn("ReportTestCoverage")
     .Does(() => {
-        var argsJson = SerializeJson(new {
-            path = $"/{branchName}/badges/coverage-reportgenerator.svg",
-            mode = "overwrite",
-            mute = true
-        });
-        var coverageBadgeFile = testCoverageReportDirectory + File("badge_linecoverage.svg");
-        var requestBytes = System.IO.File.ReadAllBytes(coverageBadgeFile);
-        var responseBody = HttpPost("https://content.dropboxapi.com/2/files/upload",
-            new HttpSettings { RequestBody = requestBytes }
-                .EnsureSuccessStatusCode()
-                .UseBearerAuthorization(dropboxToken)
-                .AppendHeader("Dropbox-API-Arg", argsJson)
-                .SetContentType("application/octet-stream"));
-        Verbose(responseBody);
+        if (!string.IsNullOrEmpty(codecovToken)) {
+            Codecov(testCoverageFile, codecovToken);
+        }
+
+        if (!string.IsNullOrEmpty(dropboxToken)) {
+            var argsJson = SerializeJson(new {
+                path = $"/{branchName}/badges/coverage-reportgenerator.svg",
+                mode = "overwrite",
+                mute = true
+            });
+            var coverageBadgeFile = testCoverageReportDirectory + File("badge_linecoverage.svg");
+            var requestBytes = System.IO.File.ReadAllBytes(coverageBadgeFile);
+            var responseBody = HttpPost("https://content.dropboxapi.com/2/files/upload",
+                new HttpSettings { RequestBody = requestBytes }
+                    .EnsureSuccessStatusCode()
+                    .UseBearerAuthorization(dropboxToken)
+                    .AppendHeader("Dropbox-API-Arg", argsJson)
+                    .SetContentType("application/octet-stream"));
+            Verbose(responseBody);
+        }
     });
 
 Task("Package")

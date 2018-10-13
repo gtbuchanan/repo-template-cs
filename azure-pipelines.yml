@@ -24,6 +24,7 @@ steps:
 - powershell: ./build
   displayName: Cake Build
   env:
+    CODECOV_TOKEN: $(Codecov.Token)
     DROPBOX_TOKEN: $(Dropbox.Token)
 
 - task: CopyFiles@2
@@ -32,14 +33,14 @@ steps:
     sourceFolder: 'artifacts'
     contents: '**'
     targetFolder: '$(Build.ArtifactStagingDirectory)'
-    condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+    condition: succeeded()
 
 - task: PublishTestResults@2
   displayName: Publish Test Results
   inputs:
     testRunner: VSTest
     testResultsFiles: '$(Build.ArtifactStagingDirectory)/TestResults/TestResults.trx'
-    condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+    condition: succeeded()
 
 - task: PublishCodeCoverageResults@1
   displayName: Publish Test Coverage
@@ -47,7 +48,7 @@ steps:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/TestCoverage.Cobertura.xml'
     reportDirectory: '$(Build.ArtifactStagingDirectory)/TestCoverageReport'
-    condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+    condition: succeeded()
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Test Artifacts
@@ -55,7 +56,7 @@ steps:
     pathToPublish: '$(Build.ArtifactStagingDirectory)/TestResults'
     artifactType: container
     artifactName: Test Results
-    condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+    condition: succeeded()
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Package Artifacts
