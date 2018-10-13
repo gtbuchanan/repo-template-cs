@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>RepoTemplate.CSharp</PackageId>
     <Description>A template for new repositories containing C# libraries.</Description>
   </PropertyGroup>
 
