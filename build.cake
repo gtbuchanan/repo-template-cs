@@ -145,7 +145,12 @@ Task("UploadTestCoverageCodecov")
     .WithCriteria(!string.IsNullOrEmpty(codecovToken), "Missing Codecov token")
     .IsDependentOn("ReportTestCoverage")
     .Does(() => {
-        Codecov(testCoverageFile, codecovToken);
+        Codecov(new CodecovSettings {
+            Branch = branchName,
+            Build = version,
+            Files = new [] { testCoverageFile },
+            Token = codecovToken
+        });
     });
 
 Task("UploadTestCoverage")
