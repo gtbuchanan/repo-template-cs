@@ -14,18 +14,20 @@
 // Arguments
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
-var artifactDirectory = Directory(Argument("artifactDirectory", "./artifacts"));
-var codecovToken = EnvironmentVariable("CODECOV_TOKEN");
-var dropboxToken = EnvironmentVariable("DROPBOX_TOKEN");
+var artifactDirectory = Directory(Argument("artifactDirectory",
+    EnvironmentVariable("BUILD_ARTIFACTSTAGINGDIRECTORY") ?? "./artifacts"));
+var codecovToken = Argument("codecovToken", EnvironmentVariable("CODECOV_TOKEN"));
+var dropboxToken = Argument("dropboxToken", EnvironmentVariable("DROPBOX_TOKEN"));
 
 // Build Info
 var version = GitVersioningGetVersion().SemVer2;
+var isWindows = IsRunningOnWindows();
 var isLocal = BuildSystem.IsLocalBuild;
-var isPipelines = TFBuild.IsRunningOnVSTS || TFBuild.IsRunningOnTFS;
+var isAzurePipelines = TFBuild.IsRunningOnVSTS || TFBuild.IsRunningOnTFS;
 var isFork = !StringComparer.OrdinalIgnoreCase.Equals(
     "gtbuchanan/repo-template-cs",
     TFBuild.Environment.Repository.RepoName);
-var branchName = isPipelines
+var branchName = isAzurePipelines
     ? TFBuild.Environment.Repository.Branch
     : GitBranchCurrent(".").FriendlyName;
 
@@ -33,10 +35,12 @@ var branchName = isPipelines
 var solutionFile = File("./RepoTemplate.sln");
 var testResultDirectory = artifactDirectory + Directory("TestResults");
 var testResultFileName = "TestResults.trx";
+var testResultFile = testResultDirectory + File(testResultFileName);
 var testCoverageFile = testResultDirectory + File("TestCoverage.OpenCover.xml");
 var testCoverageCoberturaFile = testResultDirectory + File("TestCoverage.Cobertura.xml");
 var testCoverageReportDirectory = artifactDirectory + Directory("TestCoverageReport");
 var testCoverageReportFile = testCoverageReportDirectory + File("index.htm");
+var packageDirectory = artifactDirectory + Directory("Packages");
 
 ///////////////////////////////////////////
 
@@ -98,61 +102,120 @@ Task("Test")
 Task("ReportTestCoverage")
     .IsDependentOn("Test")
     .Does(() => {
-        var reportTypes = isLocal ? "Html" : "HtmlInline;Cobertura;Badges";
         ReportGenerator(testCoverageFile, testCoverageReportDirectory, new ReportGeneratorSettings {
             ArgumentCustomization = args => args
-                .Append($"-reporttypes:{reportTypes}")
+                .Append($"-reporttypes:HtmlInline;Cobertura;Badges")
         });
-        if (!isLocal) {
-            MoveFile(testCoverageReportDirectory + File("Cobertura.xml"), testCoverageCoberturaFile);
-        } else if (IsRunningOnWindows()) {
-            Information("Launching Test Coverage Report...");
-            StartProcess("cmd", new ProcessSettings {
-                Arguments = $"/C start \"\" {testCoverageReportFile}"
-            });
-        }
+        MoveFile(testCoverageReportDirectory + File("Cobertura.xml"), testCoverageCoberturaFile);
+    });
+
+Task("LaunchTestCoverageReport")
+    .WithCriteria(isLocal, "CI environment")
+    .WithCriteria(isWindows, "Not Windows")
+    .IsDependentOn("ReportTestCoverage")
+    .Does(() => {
+        StartProcess("cmd", new ProcessSettings {
+            Arguments = $"/C start \"\" {testCoverageReportFile}"
+        });
+    });
+
+Task("UploadTestCoverageDropbox")
+    .WithCriteria(!isLocal, "Local environment")
+    .WithCriteria(!isFork, "Fork")
+    .WithCriteria(!string.IsNullOrEmpty(dropboxToken), "Missing Dropbox token")
+    .Does(() => {
+        var argsJson = SerializeJson(new {
+            path = $"/{branchName}/badges/coverage-reportgenerator.svg",
+            mode = "overwrite",
+            mute = true
+        });
+        var coverageBadgeFile = testCoverageReportDirectory + File("badge_linecoverage.svg");
+        var requestBytes = System.IO.File.ReadAllBytes(coverageBadgeFile);
+        var responseBody = HttpPost("https://content.dropboxapi.com/2/files/upload",
+            new HttpSettings { RequestBody = requestBytes }
+                .EnsureSuccessStatusCode()
+                .UseBearerAuthorization(dropboxToken)
+                .AppendHeader("Dropbox-API-Arg", argsJson)
+                .SetContentType("application/octet-stream"));
+        Verbose(responseBody);
+    });
+
+Task("UploadTestCoverageCodecov")
+    .WithCriteria(!isLocal, "Local environment")
+    .WithCriteria(!string.IsNullOrEmpty(codecovToken), "Missing Codecov token")
+    .IsDependentOn("ReportTestCoverage")
+    .Does(() => {
+        Codecov(new CodecovSettings {
+            Branch = branchName,
+            Build = version,
+            Files = new [] { testCoverageFile.ToString() },
+            Token = codecovToken
+        });
     });
 
 Task("UploadTestCoverage")
     .WithCriteria(!isLocal, "Local environment")
-    .WithCriteria(!isFork, "Fork")
-    .IsDependentOn("ReportTestCoverage")
-    .Does(() => {
-        if (!string.IsNullOrEmpty(codecovToken)) {
-            Codecov(testCoverageFile, codecovToken);
-        }
-
-        if (!string.IsNullOrEmpty(dropboxToken)) {
-            var argsJson = SerializeJson(new {
-                path = $"/{branchName}/badges/coverage-reportgenerator.svg",
-                mode = "overwrite",
-                mute = true
-            });
-            var coverageBadgeFile = testCoverageReportDirectory + File("badge_linecoverage.svg");
-            var requestBytes = System.IO.File.ReadAllBytes(coverageBadgeFile);
-            var responseBody = HttpPost("https://content.dropboxapi.com/2/files/upload",
-                new HttpSettings { RequestBody = requestBytes }
-                    .EnsureSuccessStatusCode()
-                    .UseBearerAuthorization(dropboxToken)
-                    .AppendHeader("Dropbox-API-Arg", argsJson)
-                    .SetContentType("application/octet-stream"));
-            Verbose(responseBody);
-        }
-    });
+    .IsDependentOn("UploadTestCoverageCodecov")
+    .IsDependentOn("UploadTestCoverageDropbox");
 
 Task("Package")
-    .IsDependentOn("UploadTestCoverage")
     .Does(() => {
         DotNetCorePack(solutionFile, new DotNetCorePackSettings {
             Configuration = configuration,
             NoBuild = true,
             NoRestore = true,
-            OutputDirectory = artifactDirectory + Directory("Packages")
+            OutputDirectory = packageDirectory
         });
     });
 
+Task("PublishTestResults")
+    .WithCriteria(isAzurePipelines, "Not Azure Pipelines")
+    .IsDependentOn("Test")
+    .Does(() => {
+        TFBuild.Commands.PublishTestResults(new TFBuildPublishTestResultsData {
+            Configuration = configuration,
+            Platform = "x64",
+            TestResultsFiles = new string[] { testResultFile },
+            TestRunTitle = "Unit Tests",
+            TestRunner = TFTestRunnerType.VSTest
+        });
+    });
+
+Task("PublishTestCoverageResults")
+    .WithCriteria(isAzurePipelines, "Not Azure Pipelines")
+    .IsDependentOn("ReportTestCoverage")
+    .Does(() => {
+        TFBuild.Commands.PublishCodeCoverage(new TFBuildPublishCodeCoverageData {
+            CodeCoverageTool = TFCodeCoverageToolType.Cobertura,
+            ReportDirectory = testCoverageReportDirectory,
+            SummaryFileLocation = testCoverageCoberturaFile
+        });
+    });
+
+Task("PublishTestArtifacts")
+    .WithCriteria(isAzurePipelines, "Not Azure Pipelines")
+    .IsDependentOn("ReportTestCoverage")
+    .Does(() => {
+        var artifactName = "TestResults";
+        Information($"##vso[artifact.upload containerfolder={artifactName};artifactname={artifactName}]{testResultDirectory}");
+    });
+
+Task("PublishPackageArtifacts")
+    .WithCriteria(isAzurePipelines, "Not Azure Pipelines")
+    .WithCriteria(!isFork, "Fork")
+    .IsDependentOn("Package")
+    .Does(() => {
+        var artifactName = "Packages";
+        Information($"##vso[artifact.upload containerfolder={artifactName};artifactname={artifactName}]{packageDirectory}");
+    });
+
 Task("Default")
-    .IsDependentOn("Package");
+    .IsDependentOn("LaunchTestCoverageReport")
+    .IsDependentOn("UploadTestCoverage")
+    .IsDependentOn("PublishTestResults")
+    .IsDependentOn("PublishTestCoverageResults")
+    .IsDependentOn("PublishTestArtifacts")
+    .IsDependentOn("PublishPackageArtifacts");
 
 ///////////////////////////////////////////
 

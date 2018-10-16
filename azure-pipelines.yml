@@ -9,7 +9,7 @@ steps:
     modifyEnvironment: true
   displayName: Setup Environment Variables
 
-- task: DotNetCoreCLI@2  
+- task: DotNetCoreCLI@2
   inputs:
     command: custom
     custom: tool
@@ -21,47 +21,5 @@ steps:
   displayName: Set Version
   condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
 
-- powershell: ./build
+- powershell: ./build -ScriptArgs @("-artifactDirectory=$(Build.ArtifactStagingDirectory)","-codecovToken=$(Codecov.Token)","-dropboxToken=$(Dropbox.Token)")
   displayName: Cake Build
-  env:
-    CODECOV_TOKEN: $(Codecov.Token)
-    DROPBOX_TOKEN: $(Dropbox.Token)
-
-- task: CopyFiles@2
-  displayName: Copy Artifacts
-  inputs:
-    sourceFolder: 'artifacts'
-    contents: '**'
-    targetFolder: '$(Build.ArtifactStagingDirectory)'
-    condition: succeeded()
-
-- task: PublishTestResults@2
-  displayName: Publish Test Results
-  inputs:
-    testRunner: VSTest
-    testResultsFiles: '$(Build.ArtifactStagingDirectory)/TestResults/TestResults.trx'
-    condition: succeeded()
-
-- task: PublishCodeCoverageResults@1
-  displayName: Publish Test Coverage
-  inputs:
-    codeCoverageTool: Cobertura
-    summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/TestCoverage.Cobertura.xml'
-    reportDirectory: '$(Build.ArtifactStagingDirectory)/TestCoverageReport'
-    condition: succeeded()
-
-- task: PublishBuildArtifacts@1
-  displayName: Publish Test Artifacts
-  inputs:
-    pathToPublish: '$(Build.ArtifactStagingDirectory)/TestResults'
-    artifactType: container
-    artifactName: Test Results
-    condition: succeeded()
-
-- task: PublishBuildArtifacts@1
-  displayName: Publish Package Artifacts
-  inputs:
-    pathToPublish: '$(Build.ArtifactStagingDirectory)/Packages'
-    artifactType: container
-    artifactName: Packages
-    condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
