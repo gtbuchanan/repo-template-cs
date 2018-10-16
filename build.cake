@@ -148,7 +148,7 @@ Task("UploadTestCoverageCodecov")
         Codecov(new CodecovSettings {
             Branch = branchName,
             Build = version,
-            Files = new [] { testCoverageFile },
+            Files = new [] { testCoverageFile.ToString() },
             Token = codecovToken
         });
     });
