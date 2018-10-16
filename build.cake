@@ -191,7 +191,8 @@ Task("PublishTestArtifacts")
     .WithCriteria(isAzurePipelines, "Not Azure Pipelines")
     .IsDependentOn("ReportTestCoverage")
     .Does(() => {
-        Information($"##vso[artifact.upload containerfolder=TestResults]{testResultDirectory}");
+        var artifactName = "TestResults";
+        Information($"##vso[artifact.upload containerfolder={artifactName};artifactname={artifactName}]{testResultDirectory}");
     });
 
 Task("PublishPackageArtifacts")
@@ -199,7 +200,8 @@ Task("PublishPackageArtifacts")
     .WithCriteria(!isFork, "Fork")
     .IsDependentOn("Package")
     .Does(() => {
-        Information($"##vso[artifact.upload containerfolder=Packages]{packageDirectory}");
+        var artifactName = "Packages";
+        Information($"##vso[artifact.upload containerfolder={artifactName};artifactname={artifactName}]{packageDirectory}");
     });
 
 Task("Default")
