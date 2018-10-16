@@ -191,7 +191,7 @@ Task("PublishTestArtifacts")
     .WithCriteria(isAzurePipelines, "Not Azure Pipelines")
     .IsDependentOn("ReportTestCoverage")
     .Does(() => {
-        TFBuild.Commands.LinkArtifact("Test Results", TFBuildArtifactType.Container, testResultDirectory);
+        Information($"##vso[artifact.upload containerfolder=TestResults]{testResultDirectory}");
     });
 
 Task("PublishPackageArtifacts")
@@ -199,7 +199,7 @@ Task("PublishPackageArtifacts")
     .WithCriteria(!isFork, "Fork")
     .IsDependentOn("Package")
     .Does(() => {
-        TFBuild.Commands.LinkArtifact("Packages", TFBuildArtifactType.Container, packageDirectory);
+        Information($"##vso[artifact.upload containerfolder=Packages]{packageDirectory}");
     });
 
 Task("Default")
