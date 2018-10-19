@@ -1,6 +1,7 @@
 [![Build Status](https://dev.azure.com/gtbuchanan/repo-template-cs/_apis/build/status/gtbuchanan.repo-template-cs?branchName=master)](https://dev.azure.com/gtbuchanan/repo-template-cs/_build/latest?definitionId=1)
 [![Test Coverage](https://dl.dropbox.com/s/fzt3bzww6hn6nkq/coverage-reportgenerator.svg)](https://dev.azure.com/gtbuchanan/repo-template-cs/_build/latest?definitionId=1)
 [![codecov](https://codecov.io/gh/gtbuchanan/repo-template-cs/branch/master/graph/badge.svg)](https://codecov.io/gh/gtbuchanan/repo-template-cs)
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/gtbuchanan/repo-template-cs)
 
 # C# Library Repository Template
 
