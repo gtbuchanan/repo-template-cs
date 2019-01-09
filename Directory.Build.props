@@ -2,7 +2,6 @@
   
   <PropertyGroup>
     <Copyright>Copyright (c) George Taylor Buchanan and Contributors</Copyright>
-    <PackageLicenseUrl>https://opensource.org/licenses/mit</PackageLicenseUrl>
     <PackageProjectUrl>https://taylorbuchanan.com</PackageProjectUrl>
     <Authors>George Taylor Buchanan and Contributors</Authors>
     <Owners>gtbuchanan</Owners>

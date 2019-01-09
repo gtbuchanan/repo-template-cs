@@ -13,6 +13,8 @@ A template for new repositories containing C# libraries.
 
 * One-step local build/test with [Cake Build](https://cakebuild.net/)
 
+* Code issue and duplication detection with [ReSharper Command Line Tools](https://www.jetbrains.com/resharper/features/command-line.html).
+
 * Continuous Integration with [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines)
 
 * Automatic external [JetBrains Annotations](https://www.jetbrains.com/help/resharper/Code_Analysis__Code_Annotations.html) from attributes with [JetBrainsAnnotations.Fody](https://github.com/tom-englert/JetBrainsAnnotations.Fody)

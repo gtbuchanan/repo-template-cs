@@ -1,8 +1,16 @@
 <Project>
-  
+
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);JETBRAINS_ANNOTATIONS</DefineConstants>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);PackExternalAnnotations</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
-  
+
+  <Target Name="PackExternalAnnotations">
+    <ItemGroup>
+      <BuildOutputInPackage Condition="Exists('$(MSBuildProjectName).ExternalAnnotations.xml')"
+                            Include="$(MSBuildProjectName).ExternalAnnotations.xml" />
+    </ItemGroup>
+  </Target>
+
 </Project>

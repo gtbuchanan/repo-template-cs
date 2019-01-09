@@ -9,20 +9,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\LICENSE" Pack="true" PackagePath="LICENSE" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-    <Content Condition="Exists('$(MSBuildProjectName).ExternalAnnotations.xml')"
-             Include="$(MSBuildProjectName).ExternalAnnotations.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Fody" Version="3.2.8" PrivateAssets="All" />
-    <PackageReference Include="JetBrainsAnnotations.Fody" Version="2.4.0" PrivateAssets="All" />
+    <PackageReference Include="Fody" Version="3.3.5" PrivateAssets="All" />
+    <PackageReference Include="JetBrainsAnnotations.Fody" Version="2.10.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" /> 
-    <PackageReference Include="Nerdbank.GitVersioning" Version="2.2.13" PrivateAssets="All" />
-    <PackageReference Include="NullGuard.Fody" Version="1.8.4" PrivateAssets="All" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="2.3.38" PrivateAssets="All" />
+    <PackageReference Include="NullGuard.Fody" Version="1.8.5" PrivateAssets="All" />
   </ItemGroup>
   
 </Project>

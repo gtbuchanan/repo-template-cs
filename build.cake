@@ -1,15 +1,22 @@
 // Add-ins
-#addin "nuget:?package=Cake.Codecov&version=0.4.0"
+#addin "nuget:?package=Cake.Codecov&version=0.5.0"
 #addin "nuget:?package=Cake.Git&version=0.19.0"
 #addin "nuget:?package=Cake.GitVersioning&version=2.2.13"
 #addin "nuget:?package=Cake.Http&version=0.5.0"
+#addin "nuget:?package=Cake.Issues&version=0.6.2"
+#addin "nuget:?package=Cake.Issues.InspectCode&version=0.6.1"
+#addin "nuget:?package=Cake.Issues.Reporting&version=0.6.1"
+#addin "nuget:?package=Cake.Issues.Reporting.Generic&version=0.6.0"
 #addin "nuget:?package=Cake.Json&version=3.0.1"
+#addin "nuget:?package=Cake.ReSharperReports&version=0.10.0"
 #addin "nuget:?package=Newtonsoft.Json&version=9.0.1"
 
 // Tools
 #tool "nuget:?package=Codecov&version=1.1.0"
+#tool "nuget:?package=JetBrains.ReSharper.CommandLineTools&version=2018.3.1"
 #tool "nuget:?package=OpenCover&version=4.6.519"
-#tool "nuget:?package=ReportGenerator&version=4.0.0-rc4"
+#tool "nuget:?package=ReportGenerator&version=4.0.5"
+#tool "nuget:?package=ReSharperReports&version=0.4.0"
 
 // Arguments
 var target = Argument("target", "Default");
@@ -42,7 +49,34 @@ var testCoverageReportDirectory = artifactDirectory + Directory("TestCoverageRep
 var testCoverageReportFile = testCoverageReportDirectory + File("index.htm");
 var packageDirectory = artifactDirectory + Directory("Packages");
 
+var codeIssues = new List<IIssue>();
+
 ///////////////////////////////////////////
+
+void DeleteDirectoryIfExists(DirectoryPath directory) {
+    if (!DirectoryExists(directory)) return;
+    DeleteDirectory(directory,
+        new DeleteDirectorySettings {
+            Recursive = true,
+            Force = true
+        });
+}
+
+void DeleteFileIfExists(FilePath file) {
+    if (!FileExists(file)) return;
+    DeleteFile(file);
+}
+
+void LaunchDefaultProgram(string filePath) {
+    var exitCode = StartProcess("cmd", new ProcessSettings {
+        Arguments = new ProcessArgumentBuilder()
+            .Append("/C")
+            .Append("start")
+            .Append("\"\"")
+            .Append(filePath)
+    });
+    if (exitCode != 0) throw new Exception("Failed to start program");
+}
 
 Setup(_ => Information($"Version {version} from branch {branchName}"));
 
@@ -59,13 +93,95 @@ Task("Clean")
     });
 
 Task("Build")
-    .IsDependentOn("Clean")
     .Does(() => {
         DotNetCoreBuild(solutionFile, new DotNetCoreBuildSettings {
             Configuration = configuration,
             Verbosity = DotNetCoreVerbosity.Minimal
         });
     });
+
+Task("DetectCodeDuplication")
+    .WithCriteria(isWindows, "Not Windows")
+    .Does(() => {
+        var duplicateFile = artifactDirectory + File("DupFinder.xml");
+        var duplicateReportDirectory = artifactDirectory + Directory("CodeDuplicationReport");
+        var duplicateReportFile = duplicateReportDirectory + File("index.html");
+
+        DeleteFileIfExists(duplicateFile);
+        DeleteDirectoryIfExists(duplicateReportDirectory);
+
+        try {
+            DupFinder(solutionFile, new DupFinderSettings {
+                ShowStats = true,
+                ShowText = true,
+                OutputFile = duplicateFile,
+                ExcludeCodeRegionsByNameSubstring = new string[] { "DupFinder Exclusion" },
+                ExcludePattern = new [] {
+                    "./**/*.AssemblyInfo.cs",
+                    "./test/**/*.cs"
+                },
+                ThrowExceptionOnFindingDuplicates = true
+            });
+        } catch (CakeException) {
+            Warning("Duplicate code detected. Generating report...");
+            EnsureDirectoryExists(duplicateReportDirectory);
+            ReSharperReports(duplicateFile, duplicateReportFile);
+            if (isLocal) {
+                LaunchDefaultProgram(duplicateReportFile);
+            }
+            throw;
+        }
+    });
+
+Task("DetectCodeIssues")
+    .WithCriteria(isWindows, "Not Windows")
+    .Does(() => {
+        var inspectionFile = artifactDirectory + File("InspectCode.xml");
+
+        DeleteFileIfExists(inspectionFile);
+
+        // BUG: Only runs single threaded (https://youtrack.jetbrains.com/issue/RSRP-427896)
+        InspectCode(solutionFile, new InspectCodeSettings {
+            SolutionWideAnalysis = true,
+            OutputFile = inspectionFile
+        });
+
+        var issues = ReadIssues(InspectCodeIssuesFromFilePath(inspectionFile), ".")
+            // BUG: ReSharper doesn't recognize some generated files from the obj directory (https://youtrack.jetbrains.com/issue/RSRP-470475)
+            .Where(i => !i.ProjectName.EndsWith(".Test")
+                && i.Message != "Cannot access internal class 'ThisAssembly' here")
+            .ToArray();
+        if (issues.Any()) {
+            Warning("{0} code issues found.", issues.Length);
+            codeIssues.AddRange(issues);
+        } else {
+            Information("No code issues found.");
+        }
+    });
+
+Task("BuildCodeIssuesReport")
+    .WithCriteria(() => codeIssues.Any(), "No Code Issues")
+    .Does(() => {
+        var codeIssuesReportDirectory = artifactDirectory + Directory("CodeIssuesReport");
+        var codeIssuesReportFile = codeIssuesReportDirectory + File("index.html");
+
+        CleanDirectory(codeIssuesReportDirectory);
+
+        var template = GenericIssueReportFormatFromEmbeddedTemplate(GenericIssueReportTemplate.HtmlDxDataGrid);
+        CreateIssueReport(codeIssues, template, "./", codeIssuesReportFile);
+    });
+
+Task("LaunchCodeIssuesReport")
+    .WithCriteria(isLocal, "Not Local Environment")
+    .WithCriteria(isWindows, "Not Windows")
+    .WithCriteria(() => codeIssues.Any(), "No Code Issues")
+    .IsDependentOn("BuildCodeIssuesReport")
+    .Does(() => LaunchDefaultProgram(artifactDirectory + File("CodeIssuesReport/index.html")));
+
+Task("AnalyzeCodeQuality")
+    .IsDependentOn("DetectCodeDuplication")
+    .IsDependentOn("DetectCodeIssues")
+    .IsDependentOn("LaunchCodeIssuesReport");
 
 Task("Test")
     .IsDependentOn("Build")
@@ -99,7 +215,7 @@ Task("Test")
             .WithFilter("-[*]PublicApiGenerator.*"));
     });
 
-Task("ReportTestCoverage")
+Task("BuildTestCoverageReport")
     .IsDependentOn("Test")
     .Does(() => {
         ReportGenerator(testCoverageFile, testCoverageReportDirectory, new ReportGeneratorSettings {
@@ -112,12 +228,8 @@ Task("ReportTestCoverage")
 Task("LaunchTestCoverageReport")
     .WithCriteria(isLocal, "CI environment")
     .WithCriteria(isWindows, "Not Windows")
-    .IsDependentOn("ReportTestCoverage")
-    .Does(() => {
-        StartProcess("cmd", new ProcessSettings {
-            Arguments = $"/C start \"\" {testCoverageReportFile}"
-        });
-    });
+    .IsDependentOn("BuildTestCoverageReport")
+    .Does(() => LaunchDefaultProgram(testCoverageReportFile.ToString()));
 
 Task("UploadTestCoverageDropbox")
     .WithCriteria(!isLocal, "Local environment")
@@ -143,7 +255,7 @@ Task("UploadTestCoverageDropbox")
 Task("UploadTestCoverageCodecov")
     .WithCriteria(!isLocal, "Local environment")
     .WithCriteria(!string.IsNullOrEmpty(codecovToken), "Missing Codecov token")
-    .IsDependentOn("ReportTestCoverage")
+    .IsDependentOn("BuildTestCoverageReport")
     .Does(() => {
         Codecov(new CodecovSettings {
             Branch = branchName,
@@ -183,7 +295,7 @@ Task("PublishTestResults")
 
 Task("PublishTestCoverageResults")
     .WithCriteria(isAzurePipelines, "Not Azure Pipelines")
-    .IsDependentOn("ReportTestCoverage")
+    .IsDependentOn("BuildTestCoverageReport")
     .Does(() => {
         TFBuild.Commands.PublishCodeCoverage(new TFBuildPublishCodeCoverageData {
             CodeCoverageTool = TFCodeCoverageToolType.Cobertura,
@@ -194,7 +306,7 @@ Task("PublishTestCoverageResults")
 
 Task("PublishTestArtifacts")
     .WithCriteria(isAzurePipelines, "Not Azure Pipelines")
-    .IsDependentOn("ReportTestCoverage")
+    .IsDependentOn("BuildTestCoverageReport")
     .Does(() => {
         var artifactName = "TestResults";
         Information($"##vso[artifact.upload containerfolder={artifactName};artifactname={artifactName}]{testResultDirectory}");
@@ -210,6 +322,9 @@ Task("PublishPackageArtifacts")
     });
 
 Task("Default")
+    .IsDependentOn("Clean")
+    .IsDependentOn("Build")
+    .IsDependentOn("AnalyzeCodeQuality")
     .IsDependentOn("LaunchTestCoverageReport")
     .IsDependentOn("UploadTestCoverage")
     .IsDependentOn("PublishTestResults")
