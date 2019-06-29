@@ -146,7 +146,9 @@ Task("DetectCodeIssues")
             OutputFile = inspectionFile
         });
 
-        var issues = ReadIssues(InspectCodeIssuesFromFilePath(inspectionFile), ".")
+        var issues = ReadIssues(
+                InspectCodeIssuesFromFilePath(inspectionFile),
+                MakeAbsolute(Directory(".")))
             // BUG: ReSharper doesn't recognize some generated files from the obj directory (https://youtrack.jetbrains.com/issue/RSRP-470475)
             .Where(i => !i.ProjectName.EndsWith(".Test")
                 && i.Message != "Cannot access internal class 'ThisAssembly' here")
