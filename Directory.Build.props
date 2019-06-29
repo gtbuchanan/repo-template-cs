@@ -1,5 +1,5 @@
 <Project>
-  
+
   <PropertyGroup>
     <Copyright>Copyright (c) George Taylor Buchanan and Contributors</Copyright>
     <PackageProjectUrl>https://taylorbuchanan.com</PackageProjectUrl>
@@ -12,10 +12,11 @@
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
+    <NoWarn>NU5105</NoWarn>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" PrivateAssets="All" />
   </ItemGroup>
-  
+
 </Project>

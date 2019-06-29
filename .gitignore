@@ -31,3 +31,6 @@ _ReSharper.*
 *.suo
 *.userprefs
 *.sln.ide
+
+# VS Code
+.ionide

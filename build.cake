@@ -3,17 +3,17 @@
 #addin "nuget:?package=Cake.Git&version=0.19.0"
 #addin "nuget:?package=Cake.GitVersioning&version=2.2.13"
 #addin "nuget:?package=Cake.Http&version=0.5.0"
-#addin "nuget:?package=Cake.Issues&version=0.6.2"
-#addin "nuget:?package=Cake.Issues.InspectCode&version=0.6.1"
-#addin "nuget:?package=Cake.Issues.Reporting&version=0.6.1"
-#addin "nuget:?package=Cake.Issues.Reporting.Generic&version=0.6.0"
+#addin "nuget:?package=Cake.Issues&version=0.7.0"
+#addin "nuget:?package=Cake.Issues.InspectCode&version=0.7.1"
+#addin "nuget:?package=Cake.Issues.Reporting&version=0.7.0"
+#addin "nuget:?package=Cake.Issues.Reporting.Generic&version=0.7.0"
 #addin "nuget:?package=Cake.Json&version=3.0.1"
-#addin "nuget:?package=Cake.ReSharperReports&version=0.10.0"
+#addin "nuget:?package=Cake.ReSharperReports&version=0.11.0"
 #addin "nuget:?package=Newtonsoft.Json&version=9.0.1"
 
 // Tools
 #tool "nuget:?package=Codecov&version=1.1.0"
-#tool "nuget:?package=JetBrains.ReSharper.CommandLineTools&version=2018.3.1"
+#tool "nuget:?package=JetBrains.ReSharper.CommandLineTools&version=2019.1.2"
 #tool "nuget:?package=OpenCover&version=4.6.519"
 #tool "nuget:?package=ReportGenerator&version=4.0.5"
 #tool "nuget:?package=ReSharperReports&version=0.4.0"
@@ -118,6 +118,7 @@ Task("DetectCodeDuplication")
                 ExcludeCodeRegionsByNameSubstring = new string[] { "DupFinder Exclusion" },
                 ExcludePattern = new [] {
                     "./**/*.AssemblyInfo.cs",
+                    "./**/obj/**/*.*",
                     "./test/**/*.cs"
                 },
                 ThrowExceptionOnFindingDuplicates = true
@@ -146,10 +147,9 @@ Task("DetectCodeIssues")
             OutputFile = inspectionFile
         });
 
-        var issues = ReadIssues(InspectCodeIssuesFromFilePath(inspectionFile), ".")
-            // BUG: ReSharper doesn't recognize some generated files from the obj directory (https://youtrack.jetbrains.com/issue/RSRP-470475)
-            .Where(i => !i.ProjectName.EndsWith(".Test")
-                && i.Message != "Cannot access internal class 'ThisAssembly' here")
+        var issues = ReadIssues(
+                InspectCodeIssuesFromFilePath(inspectionFile),
+                MakeAbsolute(Directory(".")))
             .ToArray();
         if (issues.Any()) {
             Warning("{0} code issues found.", issues.Length);
