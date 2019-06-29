@@ -1,4 +1,5 @@
-﻿using AutoFixture;
+using AutoFixture;
+using JetBrains.Annotations;
 using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
@@ -34,6 +35,7 @@ namespace RepoTemplate.Test.Customizations
 
         private static IFixture CreateFixture() => new Fixture().Customize(new DomainCustomization());
 
+        [UsedImplicitly]
         internal interface ITest
         {
             string Test { get; }
